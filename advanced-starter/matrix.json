@@ -1,0 +1,7 @@
+{
+  "include": [
+    { "service": "web", "node": "20" },
+    { "service": "api", "node": "20" },
+    { "service": "api", "node": "22" }
+  ]
+}
