@@ -1,4 +1,4 @@
-name: Zadanie 1: Publikacja obrazu Docker do GHCR
+name: 'Zadanie 1: Publikacja obrazu Docker do GHCR'
 
 on:
   push:
