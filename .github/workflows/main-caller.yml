@@ -1,0 +1,31 @@
+name: 'Zadanie 4: Composite action i reużywalny workflow'
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  call-web-tests:
+    uses: ./.github/workflows/reusable-test.yml
+    with:
+      service: 'web'
+      node-version: 20
+
+  call-api-tests:
+    uses: ./.github/workflows/reusable-test.yml
+    with:
+      service: 'api'
+      node-version: 22
+
+  print-outputs:
+    runs-on: ubuntu-latest
+    needs:
+      - call-web-tests
+      - call-api-tests
+    steps:
+      - name: Podsumowanie wyników testów
+        run: |
+          echo "Status testów frontendu (Web): ${{ needs.call-web-tests.outputs.job-status }}"
+          echo "Status testów backendu (API): ${{ needs.call-api-tests.outputs.job-status }}"

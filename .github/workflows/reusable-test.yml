@@ -1,0 +1,31 @@
+name: 'Szablon testów wielokrotnego użytku'
+
+on:
+  workflow_call:
+    inputs:
+      service:
+        required: true
+        type: string
+      node-version:
+        required: true
+        type: string
+    outputs:
+      job-status:
+        description: 'Status przekazany z testów'
+        value: ${{ jobs.test.outputs.action-status }}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    outputs:
+      action-status: ${{ steps.composite.outputs.duration }}
+    steps:
+      - name: Pobranie kodu z repozytorium
+        uses: actions/checkout@v4
+
+      - name: Odpalenie kroków testowych serwisu
+        id: composite
+        uses: ./.github/actions/test-service
+        with:
+          service: ${{ inputs.service }}
+          node-version: ${{ inputs.node-version }}

@@ -1,0 +1,38 @@
+name: 'Kroki testowe serwisu'
+description: 'Instaluje paczki i odpala testy dla wybranego serwisu'
+
+inputs:
+  service:
+    description: 'Folder serwisu'
+    required: true
+  node-version:
+    description: 'Wersja Node.js'
+    required: true
+
+outputs:
+  duration:
+    description: 'Wynik końcowy z testów'
+    value: ${{ steps.test.outputs.status }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Ustawienie Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+        cache: 'npm'
+        cache-dependency-path: ./advanced-starter/services/${{ inputs.service }}/package-lock.json
+
+    - name: Instalacja zależności
+      run: npm ci
+      working-directory: ./advanced-starter/services/${{ inputs.service }}
+      shell: bash
+
+    - name: Uruchomienie testów
+      id: test
+      run: |
+        npm test
+        echo "status=success" >> $GITHUB_OUTPUT
+      working-directory: ./advanced-starter/services/${{ inputs.service }}
+      shell: bash
