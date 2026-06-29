@@ -1,0 +1,49 @@
+name: 'Zadanie 2: Dynamiczna macierz testów'
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  setup-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix-data: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: Pobranie kodu
+        uses: actions/checkout@v4
+
+      - name: Odczyt konfiguracji macierzy
+        id: set-matrix
+        run: |
+          CONTENT=$(jq -c . ./advanced-starter/matrix.json)
+          echo "matrix=$CONTENT" >> $GITHUB_OUTPUT
+
+  run-tests:
+    needs: setup-matrix
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.setup-matrix.outputs.matrix-data) }}
+
+    name: 'Test (${{ matrix.service }} na Node ${{ matrix.node }})'
+    steps:
+      - name: Pobranie kodu
+        uses: actions/checkout@v4
+
+      - name: Instalacja Node.js ${{ matrix.node }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: 'npm'
+          cache-dependency-path: ./advanced-starter/services/${{ matrix.service }}/package-lock.json
+
+      - name: Instalacja zależności
+        run: npm ci
+        working-directory: ./advanced-starter/services/${{ matrix.service }}
+
+      - name: Uruchomienie testów
+        run: npm test
+        working-directory: ./advanced-starter/services/${{ matrix.service }}
