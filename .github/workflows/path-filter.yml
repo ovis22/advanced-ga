@@ -1,0 +1,77 @@
+name: 'Zadanie 3: Filtrowanie ścieżek i kontrola współbieżności'
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      web: ${{ steps.filter.outputs.web }}
+      api: ${{ steps.filter.outputs.api }}
+    steps:
+      - name: Pobranie kodu
+        uses: actions/checkout@v4
+
+      - name: Wykrywanie zmian w ścieżkach
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            web:
+              - 'advanced-starter/services/web/**'
+            api:
+              - 'advanced-starter/services/api/**'
+
+  build-web:
+    needs: changes
+    if: ${{ needs.changes.outputs.web == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pobranie kodu
+        uses: actions/checkout@v4
+
+      - name: Instalacja Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: ./advanced-starter/services/web/package-lock.json
+
+      - name: Instalacja zależności
+        run: npm ci
+        working-directory: ./advanced-starter/services/web
+
+      - name: Budowanie frontendu
+        run: npm run build
+        working-directory: ./advanced-starter/services/web
+
+  build-api:
+    needs: changes
+    if: ${{ needs.changes.outputs.api == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pobranie kodu
+        uses: actions/checkout@v4
+
+      - name: Instalacja Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+          cache-dependency-path: ./advanced-starter/services/api/package-lock.json
+
+      - name: Instalacja zależności
+        run: npm ci
+        working-directory: ./advanced-starter/services/api
+
+      - name: Uruchomienie testów API
+        run: npm test
+        working-directory: ./advanced-starter/services/api 
